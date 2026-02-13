@@ -1,78 +1,134 @@
-<!-- This should be the location of the title of the repository, normally the short name -->
-# repo-template
+# Guardium Discovery for Universal Connector
 
-<!-- Build Status, is a great thing to have at the top of your repository, it shows that you take your CI/CD as first class citizens -->
-<!-- [![Build Status](https://travis-ci.org/jjasghar/ibm-cloud-cli.svg?branch=master)](https://travis-ci.org/jjasghar/ibm-cloud-cli) -->
+Automated discovery tool that scans AWS accounts to find datastores and generates Terraform configurations for IBM Guardium Data Protection Universal Connector integration.
 
-<!-- Not always needed, but a scope helps the user understand in a short sentance like below, why this repo exists -->
-## Scope
+## Quick Start
 
-The purpose of this project is to provide a template for new open source repositories.
+### 1. Configure AWS Credentials
 
-<!-- A more detailed Usage or detailed explaination of the repository here -->
-## Usage
+```bash
+# Option 1: AWS CLI
+aws configure
 
-This repository contains some example best practices for open source repositories:
+# Option 2: Environment variables
+export AWS_ACCESS_KEY_ID=your-key
+export AWS_SECRET_ACCESS_KEY=your-secret
+export AWS_REGION=us-east-1
 
-* [LICENSE](LICENSE)
-* [README.md](README.md)
-* [CONTRIBUTING.md](CONTRIBUTING.md)
-* [MAINTAINERS.md](MAINTAINERS.md)
-* [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md)
-<!-- A Changelog allows you to track major changes and things that happen, https://github.com/github-changelog-generator/github-changelog-generator can help automate the process -->
-* [CHANGELOG.md](CHANGELOG.md)
-
-> These are optional
-
-<!-- The following are OPTIONAL, but strongly suggested to have in your repository. -->
-* [dco.yml](.github/dco.yml) - This enables DCO bot for you, please take a look https://github.com/probot/dco for more details.
-* [travis.yml](.travis.yml) - This is a example `.travis.yml`, please take a look https://docs.travis-ci.com/user/tutorial/ for more details.
-
-These may be copied into a new or existing project to make it easier for developers not on a project team to collaborate.
-
-<!-- A notes section is useful for anything that isn't covered in the Usage or Scope. Like what we have below. -->
-## Notes
-
-**NOTE: While this boilerplate project uses the Apache 2.0 license, when
-establishing a new repo using this template, please use the
-license that was approved for your project.**
-
-**NOTE: This repository has been configured with the [DCO bot](https://github.com/probot/dco).
-When you set up a new repository that uses the Apache license, you should
-use the DCO to manage contributions. The DCO bot will help enforce that.
-Please contact one of the IBM GH Org stewards.**
-
-<!-- Questions can be useful but optional, this gives you a place to say, "This is how to contact this project maintainers or create PRs -->
-If you have any questions or issues you can create a new [issue here][issues].
-
-Pull requests are very welcome! Make sure your patches are well tested.
-Ideally create a topic branch for every separate change you make. For
-example:
-
-1. Fork the repo
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Added some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
-
-## License
-
-All source files must include a Copyright and License header. The SPDX license header is 
-preferred because it can be easily scanned.
-
-If you would like to see the detailed LICENSE click [here](LICENSE).
-
-```text
-#
-# Copyright IBM Corp. {Year project was created} - {Current Year}
-# SPDX-License-Identifier: Apache-2.0
-#
+# Option 3: AWS Profile
+export AWS_PROFILE=your-profile
 ```
-## Authors
 
-Optionally, you may include a list of authors, though this is redundant with the built-in
-GitHub list of contributors.
+### 2. Run Discovery
 
-- Author: New OpenSource IBMer <new-opensource-ibmer@ibm.com>
+```bash
+# Discover all UC-compatible datastores
+guardium-discovery uc --region us-east-1 --output-dir ./output/uc
 
-[issues]: https://github.com/IBM/repo-template/issues/new
+# Review generated configuration
+cat ./output/uc/main.tf
+```
+
+**Note for macOS users:** After downloading, you may need to remove the quarantine attribute:
+```bash
+xattr -d com.apple.quarantine ./guardium-discovery
+```
+
+### 3. Configure and Deploy
+
+```bash
+cd ./output/uc
+
+# Copy and edit configuration
+cp terraform.tfvars.example terraform.tfvars
+# Edit terraform.tfvars with your Guardium credentials
+
+# Deploy
+terraform init
+terraform plan
+terraform apply
+```
+
+## What Gets Discovered?
+
+The tool automatically discovers and configures:
+
+- ✅ **AWS Aurora PostgreSQL** (Session audit only)
+- ✅ **AWS RDS PostgreSQL** (Session audit only)
+- ✅ **AWS Aurora MySQL**
+- ✅ **AWS RDS MariaDB**
+- ✅ **AWS RDS MySQL**
+- ✅ **AWS DynamoDB**
+- ✅ **AWS DocumentDB**
+- ✅ **AWS Redshift**
+
+## Command Options
+
+```bash
+guardium-discovery uc \
+  --region us-east-1 \
+  --output-dir ./output/uc \
+  --postgres-session-only \
+  --include-dynamodb \
+  --include-documentdb \
+  --include-redshift \
+  --verbose
+```
+
+**Available Options:**
+- `--region` - AWS region to scan (required)
+- `--output-dir` - Output directory for generated files (default: ./output/uc)
+- `--postgres-session-only` - Only include PostgreSQL session modules (default: true)
+- `--include-dynamodb` - Include DynamoDB tables (default: true)
+- `--include-documentdb` - Include DocumentDB clusters (default: true)
+- `--include-redshift` - Include Redshift clusters (default: true)
+- `--dry-run` - Preview what would be discovered without generating files
+- `--verbose` - Enable verbose logging
+
+## Prerequisites
+
+1. **AWS Credentials** - Valid AWS credentials with read permissions for:
+   - RDS (DescribeDBInstances, DescribeDBClusters)
+   - DynamoDB (ListTables, DescribeTable)
+   - Redshift (DescribeClusters)
+   - DocumentDB (DescribeDBClusters)
+
+2. **Terraform** - Version 1.0.0 or later
+
+3. **Guardium Data Protection** - Running GDP instance with API access
+
+## Required AWS Permissions
+
+The discovery tool needs read-only permissions:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "rds:DescribeDBInstances",
+        "rds:DescribeDBClusters",
+        "dynamodb:ListTables",
+        "dynamodb:DescribeTable",
+        "redshift:DescribeClusters",
+        "docdb:DescribeDBClusters"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+## Support
+
+For issues and questions:
+- Create an issue in this repository
+- Contact the maintainers
+
+## Related Projects
+
+- [terraform-guardium-datastore-audit](https://github.com/IBM/terraform-guardium-datastore-audit) - Audit/UC modules
+- [terraform-guardium-gdp](https://github.com/IBM/terraform-guardium-gdp) - GDP integration modules
+- [terraform-provider-guardium-data-protection](https://github.com/IBM/terraform-provider-guardium-data-protection) - Guardium Terraform provider
