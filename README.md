@@ -21,7 +21,7 @@ The Guardium Discovery CLI provides a complete workflow for discovering, configu
 ### 1. Configure AWS Credentials
 
 ```bash
-# Option 1: AWS CLI
+# Option 1: AWS CLI (recommended to choose seecure login)
 aws configure
 
 # Option 2: Environment variables
@@ -31,9 +31,6 @@ export AWS_REGION=us-east-1
 
 # Option 3: AWS Profile
 export AWS_PROFILE=your-profile
-
-# Option 3: AWS Role
-export AWS_ROLE=your-role
 ```
 
 **Note for macOS users:** After downloading, you may need to remove the quarantine attribute:
