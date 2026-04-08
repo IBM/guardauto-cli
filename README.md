@@ -53,12 +53,11 @@ terraform apply
 
 The tool automatically discovers and configures:
 
-- ✅ **AWS Aurora PostgreSQL** (Session and Object-level audit)
-- ✅ **AWS RDS PostgreSQL** (Session and Object-level audit)
+- ✅ **AWS Aurora PostgreSQL** (Session audit only)
+- ✅ **AWS RDS PostgreSQL** (Session audit only)
 - ✅ **AWS Aurora MySQL**
 - ✅ **AWS RDS MariaDB**
 - ✅ **AWS RDS MySQL**
-- ✅ **AWS Neptune**
 - ✅ **AWS DynamoDB**
 - ✅ **AWS DocumentDB**
 - ✅ **AWS Redshift**
