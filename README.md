@@ -55,7 +55,7 @@ The tool automatically discovers and configures:
 
 - ✅ **AWS Aurora PostgreSQL** (Session audit only)
 - ✅ **AWS RDS PostgreSQL** (Session audit only)
-- ✅ **AWS Neptune**
+- ✅ **AWS Aurora MySQL**
 - ✅ **AWS RDS MariaDB**
 - ✅ **AWS RDS MySQL**
 - ✅ **AWS DynamoDB**
